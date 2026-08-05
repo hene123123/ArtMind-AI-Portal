@@ -1,0 +1,30 @@
+[
+  {
+    "id": "p1",
+    "title": "Starry Night Abstract",
+    "artist": "Vincent AI",
+    "style": "Abstract",
+    "category": "Abstract Paintings",
+    "medium": "Oil",
+    "surface": "Canvas",
+    "primary_color": "#1A2B4C",
+    "color_theme": "Blue",
+    "price": 450,
+    "image_url": "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?w=500",
+    "description": "Một bức tranh trừu tượng với tông màu xanh lam huyền bí."
+  },
+  {
+    "id": "p2",
+    "title": "Autumn Valley Landscape",
+    "artist": "Claude Nature",
+    "style": "Landscape",
+    "category": "Landscape Paintings",
+    "medium": "Watercolor",
+    "surface": "Paper",
+    "primary_color": "#D35400",
+    "color_theme": "Orange",
+    "price": 300,
+    "image_url": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500",
+    "description": "Cảnh phong cảnh mùa thu rực rỡ sắc cam vàng."
+  }
+]
