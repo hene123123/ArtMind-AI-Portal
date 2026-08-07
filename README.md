@@ -1,1 +1,3 @@
 I frankly don't know what to, like, introduce here. Not yet. But, one thing is certain: I do not expect this backend part not to have errors.
+
+For now, the backend part is for testing if the JSON data of mock paintings that are included in this part's code can be seen, which...they ARE visible, so a success for the moment. It's inevitable that there needs to be changes, though...
