@@ -4,6 +4,10 @@ require('dotenv').config();
 
 const paintingsData = require('./data/paintings.json');
 
+// Import 2 file Route vừa viết
+const searchRouter = require('./routes/search');
+const recognizeRouter = require('./routes/recognize');
+
 const app = express();
 const PORT = process.env.PORT || 5000;
 
