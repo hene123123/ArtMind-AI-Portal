@@ -3,8 +3,8 @@ node_modules/
 build/
 dist/
 .DS_Store
-# Bỏ qua tất cả ảnh tạm do user upload vào server
+# Ignore all temporary images uploaded by users to the server
 server/uploads/*
 
-# Nhưng giữ lại file .gitkeep để không bị mất thư mục
+# But keep the .gitkeep file so that the directory is not lost
 !server/uploads/.gitkeep
