@@ -3,3 +3,8 @@ node_modules/
 build/
 dist/
 .DS_Store
+# Bỏ qua tất cả ảnh tạm do user upload vào server
+server/uploads/*
+
+# Nhưng giữ lại file .gitkeep để không bị mất thư mục
+!server/uploads/.gitkeep
