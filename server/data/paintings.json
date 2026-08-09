@@ -26,5 +26,62 @@
     "price": 300,
     "image_url": "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?w=500",
     "description": "Cảnh phong cảnh mùa thu rực rỡ sắc cam vàng."
+  },
+
+  {
+    "id": "p3",
+    "title": "Lá cờ Quyết chiến Quyết thắng trên nóc hầm De Castries",
+    "artist": "Triệu Đại",
+    "style": "Historical Realism",
+    "category": "Historical Paintings",
+    "medium": "Photography",
+    "surface": "Photographic Paper",
+    "primary_color": "#8B0000",
+    "color_theme": "Red",
+    "price": 12000,
+    "image_url": "https://vi.wikipedia.org/wiki/Chi%E1%BA%BFn_d%E1%BB%8Bch_%C4%90i%E1%BB%87n_Bi%C3%AAn_Ph%E1%BB%A7#/media/T%E1%BA%ADp_tin:Victory_in_Battle_of_Dien_Bien_Phu.jpg",
+    "description": "Khoảnh khắc lịch sử chói lọi ngày 7/5/1954 khi lá cờ Quyết chiến Quyết thắng tung bay trên nóc hầm chỉ huy Tập đoàn căn cứ điểm Điện Biên Phủ, khẳng định hòa bình và độc lập cho dân tộc Việt Nam."
+  },
+  {
+    "id": "p4",
+    "title": "Cắm cờ Chiến thắng trên nóc tòa nhà Reichstag. Tên gốc của cờ là \"Cờ Chiến thắng\" (tiếng Nga: Знамя Победы, Znamya Pobedy).",    
+    "artist": "Yevgeny Khaldei",
+    "style": "Historical Realism",
+    "category": "Historical Paintings",
+    "medium": "Photography",
+    "surface": "Photographic Paper",
+    "primary_color": "#2C2C2C",
+    "color_theme": "Black & White",
+    "price": 15000,
+    "image_url": "https://vi.wikipedia.org/wiki/C%E1%BB%9D_Chi%E1%BA%BFn_th%E1%BA%AFng_tr%C3%AAn_n%C3%B3c_Reichstag#/media/T%E1%BA%ADp_tin:Raising_a_flag_over_the_Reichstag.jpg",
+    "description": "Tác phẩm nhiếp ảnh kinh điển ghi lại thời khắc Hồng quân Liên Xô cắm Cờ Chiến thắng trên nóc tòa nhà Reichstag ở Berlin vào tháng 5 năm 1945, đánh dấu sự thất bại hoàn toàn của Phát xít Đức trong Chiến tranh Vệ quốc Vĩ đại."
+  },
+  {
+    "id": "p5",
+    "title": "Stanford Torus Space Habitat",
+    "artist": "Don Davis (NASA)",
+    "style": "Sci-Fi Realism",
+    "category": "Futuristic & Sci-Fi",
+    "medium": "Gouache & Acrylic",
+    "surface": "Canvas",
+    "primary_color": "#1E3D59",
+    "color_theme": "Blue & Green",
+    "price": 18000,
+    "image_url": "https://upload.wikimedia.org/wikipedia/commons/2/24/Stanford_Torus_interior.jpg?utm_source=vi.wikipedia.org&utm_campaign=index&utm_content=original",
+    "description": "Bức tranh minh họa kiến trúc trạm không gian dạng vành đai Stanford Torus do NASA nghiên cứu từ năm 1975 - mô phỏng môi trường sinh thái nhân tạo cho hàng chục nghìn con người sinh sống ngoài không gian."
+  },
+  {
+    "id": "p6",
+    "title": "Webb's First Deep Field",
+    "artist": "NASA / ESA / CSA / STScI",
+    "style": "Astrophotography",
+    "category": "Futuristic & Sci-Fi",
+    "medium": "Infrared Photography",
+    "surface": "Digital",
+    "primary_color": "#0B0C10",
+    "color_theme": "Dark Blue & Gold",
+    "price": 25000,
+    "image_url": "https://en.wikipedia.org/wiki/Webb%27s_First_Deep_Field#/media/File:Webb's_First_Deep_Field.jpg",
+    "description": "Hình ảnh hồng ngoại sâu nhất và rõ nét nhất về vũ trụ xa xôi được chụp bởi Kính thiên văn không gian James Webb - đỉnh cao công nghệ quang học và vật lý hiện đại của nhân loại."
   }
 ]
