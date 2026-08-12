@@ -1,11 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { GoogleGenerativeAI } = require('@google/generative-ai');
-const paintingsData = require('../data/paintings.json');
+const Painting = require('../models/Painting');
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// POST /api/search/smart
 router.post('/smart', async (req, res) => {
   try {
     const { query } = req.body;
@@ -24,16 +23,20 @@ router.post('/smart', async (req, res) => {
     const responseText = result.response.text().trim();
     const extractedFilters = JSON.parse(responseText);
 
-    let filteredPaintings = paintingsData.filter(painting => {
-      let isMatch = true;
-      if (extractedFilters.style && !painting.style.toLowerCase().includes(extractedFilters.style.toLowerCase())) {
-        isMatch = false;
-      }
-      if (extractedFilters.color_theme && !painting.color_theme.toLowerCase().includes(extractedFilters.color_theme.toLowerCase())) {
-        isMatch = false;
-      }
-      return isMatch;
-    });
+    // Xây dựng câu truy vấn MongoDB động
+    let mongoQuery = {};
+    if (extractedFilters.style) {
+      mongoQuery.style = { $regex: extractedFilters.style, $options: 'i' };
+    }
+    if (extractedFilters.color_theme) {
+      mongoQuery.color_theme = { $regex: extractedFilters.color_theme, $options: 'i' };
+    }
+    if (extractedFilters.medium) {
+      mongoQuery.medium = { $regex: extractedFilters.medium, $options: 'i' };
+    }
+
+    // Truy vấn dữ liệu trong MongoDB
+    const filteredPaintings = await Painting.find(mongoQuery);
 
     res.json({
       success: true,

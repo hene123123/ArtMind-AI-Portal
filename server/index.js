@@ -1,47 +1,48 @@
 const express = require('express');
 const cors = require('cors');
+const mongoose = require('mongoose');
 require('dotenv').config();
 
+const Painting = require('./models/Painting');
 const paintingsData = require('./data/paintings.json');
 
-// Import 2 file Route vừa viết
 const searchRouter = require('./routes/search');
 const recognizeRouter = require('./routes/recognize');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
-// Middlewares
 app.use(cors());
 app.use(express.json());
 
-// API 1: Healthcheck Server
-app.get('/', (req, res) => {
-  res.send('ArtMind AI Portal - Backend API is running!');
-});
+// Kết nối MongoDB Atlas
+mongoose.connect(process.env.MONGO_URI)
+  .then(async () => {
+    console.log('✅ Đã kết nối thành công tới MongoDB Atlas!');
+    
+    // Tự động seed data từ paintings.json nếu Database đang trống
+    const count = await Painting.countDocuments();
+    if (count === 0) {
+      await Painting.insertMany(paintingsData);
+      console.log('🚀 Đã tự động nạp Data từ paintings.json lên MongoDB Atlas!');
+    }
+  })
+  .catch(err => console.error('❌ Lỗi kết nối MongoDB:', err));
 
-// API 2: Lấy toàn bộ danh sách tranh (Dành cho Frontend gọi Render)
-app.get('/api/paintings', (req, res) => {
-  res.json({
-    success: true,
-    total: paintingsData.length,
-    data: paintingsData
-  });
-});
-
-// API 3: Lấy chi tiết 1 bức tranh theo ID
-app.get('/api/paintings/:id', (req, res) => {
-  const { id } = req.params;
-  const painting = paintingsData.find(item => item.id === id);
-
-  if (!painting) {
-    return res.status(404).json({ success: false, message: 'Không tìm thấy bức tranh này!' });
+// API Lấy danh sách tranh từ MongoDB
+app.get('/api/paintings', async (req, res) => {
+  try {
+    const paintings = await Painting.find();
+    res.json({ success: true, data: paintings });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Lỗi lấy dữ liệu từ MongoDB' });
   }
-
-  res.json({ success: true, data: painting });
 });
 
-// Start Server
+// Mount Routes AI
+app.use('/api/search', searchRouter);
+app.use('/api/recognize', recognizeRouter);
+
 app.listen(PORT, () => {
-  console.log(`🚀 Server Backend đang chạy tại: http://localhost:${PORT}`);
+  console.log(`🚀 Server đang chạy tại: http://localhost:${PORT}`);
 });
