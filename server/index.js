@@ -13,6 +13,9 @@ const recognizeRouter = require('./routes/recognize');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+const chatRouter = require('./routes/chat');
+app.use('/api/chat', chatRouter);
+
 app.use(cors());
 app.use(express.json());
 
