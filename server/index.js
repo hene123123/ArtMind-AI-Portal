@@ -1,7 +1,8 @@
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-require('dotenv').config();
+
 
 const Painting = require('./models/Painting');
 const paintingsData = require('./data/paintings.json');
