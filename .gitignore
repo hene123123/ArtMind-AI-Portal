@@ -1,0 +1,10 @@
+node_modules/
+.env
+build/
+dist/
+.DS_Store
+# Ignore all temporary images uploaded by users to the server
+server/uploads/*
+
+# But keep the .gitkeep file so that the directory is not lost
+!server/uploads/.gitkeep

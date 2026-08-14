@@ -1,2 +1,3 @@
-# ArtMind-AI-Portal
-ArtMind AI Portal
+Introduced a few more images. Yea, some sci-fi and some history pics ;)
+
+though why has that Minh guy not responded....
