@@ -1,53 +1,76 @@
 const express = require('express');
-const router = express.Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 const Painting = require('../models/Painting');
+const { buildPaintingFilter, paginateQuery } = require('../utils/queryHelpers');
+const { extractSearchFilters, isGeminiConfigured } = require('../utils/gemini');
+const { trackEvent } = require('../utils/analyticsService');
+const { optionalAuth } = require('../middleware/auth');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const router = express.Router();
 
-router.post('/smart', async (req, res) => {
+router.get('/', optionalAuth, async (req, res) => {
   try {
-    const { query } = req.body;
+    const filter = buildPaintingFilter(req.query);
+    const result = await paginateQuery(Painting, filter, req.query);
+
+    if (req.query.q) {
+      await trackEvent({
+        userId: req.user?._id || null,
+        eventType: 'search',
+        keyword: req.query.q
+      });
+    }
+
+    return res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Regular search error:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi tìm kiếm' });
+  }
+});
+
+router.post('/smart', optionalAuth, async (req, res) => {
+  try {
+    const { query, page, limit, sort } = req.body;
 
     if (!query) {
       return res.status(400).json({ success: false, message: 'Vui lòng nhập câu tìm kiếm!' });
     }
 
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-    const prompt = `Bạn là bộ phân tích dữ liệu cho website tranh nghệ thuật. Hãy trích xuất thông tin từ câu hỏi tìm kiếm sau và trả về DUY NHẤT một chuỗi JSON thuần (không chứa markdown, không chứa \`\`\`json):
-    {"style": "Tên trường phái nếu có", "color_theme": "Màu sắc chủ đạo nếu có", "medium": "Chất liệu nếu có"}
-    
-    Câu tìm kiếm: "${query}"`;
+    const extractedFilters = await extractSearchFilters(query);
+    const mongoQuery = {};
 
-    const result = await model.generateContent(prompt);
-    const responseText = result.response.text().trim();
-    const extractedFilters = JSON.parse(responseText);
+    if (extractedFilters.style) mongoQuery.style = { $regex: extractedFilters.style, $options: 'i' };
+    if (extractedFilters.category) mongoQuery.category = { $regex: extractedFilters.category, $options: 'i' };
+    if (extractedFilters.color_theme) mongoQuery.color_theme = { $regex: extractedFilters.color_theme, $options: 'i' };
+    if (extractedFilters.medium) mongoQuery.medium = { $regex: extractedFilters.medium, $options: 'i' };
+    if (extractedFilters.artist) mongoQuery.artist = { $regex: extractedFilters.artist, $options: 'i' };
 
-    // Xây dựng câu truy vấn MongoDB động
-    let mongoQuery = {};
-    if (extractedFilters.style) {
-      mongoQuery.style = { $regex: extractedFilters.style, $options: 'i' };
-    }
-    if (extractedFilters.color_theme) {
-      mongoQuery.color_theme = { $regex: extractedFilters.color_theme, $options: 'i' };
-    }
-    if (extractedFilters.medium) {
-      mongoQuery.medium = { $regex: extractedFilters.medium, $options: 'i' };
+    if (extractedFilters.keyword) {
+      const keyword = extractedFilters.keyword;
+      mongoQuery.$or = [
+        { title: { $regex: keyword, $options: 'i' } },
+        { description: { $regex: keyword, $options: 'i' } },
+        { ai_tags: { $regex: keyword, $options: 'i' } }
+      ];
     }
 
-    // Truy vấn dữ liệu trong MongoDB
-    const filteredPaintings = await Painting.find(mongoQuery);
+    const result = await paginateQuery(Painting, mongoQuery, { page, limit, sort });
 
-    res.json({
-      success: true,
-      ai_extracted: extractedFilters,
-      total: filteredPaintings.length,
-      data: filteredPaintings
+    await trackEvent({
+      userId: req.user?._id || null,
+      eventType: 'search',
+      keyword: query,
+      metadata: extractedFilters
     });
 
+    return res.json({
+      success: true,
+      ai_extracted: extractedFilters,
+      ai_mode: isGeminiConfigured() ? 'gemini' : 'local_fallback',
+      ...result
+    });
   } catch (error) {
-    console.error('Lỗi Smart Search:', error);
-    res.status(500).json({ success: false, message: 'Lỗi xử lý AI Smart Search' });
+    console.error('Smart search error:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi xử lý AI Smart Search' });
   }
 });
 
