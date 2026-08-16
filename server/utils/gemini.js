@@ -8,7 +8,7 @@ const {
 let genAI = null;
 
 function getGeminiModelName() {
-  return process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  return process.env.GEMINI_MODEL || 'gemini-2.5-flash';
 }
 
 function isGeminiConfigured() {
