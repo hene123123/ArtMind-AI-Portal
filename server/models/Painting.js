@@ -12,7 +12,14 @@ const paintingSchema = new mongoose.Schema({
   color_theme: { type: String },
   price: { type: Number, required: true },
   image_url: { type: String, required: true },
-  description: { type: String }
-});
+  description: { type: String },
+  views: { type: Number, default: 0 },
+  popularity: { type: Number, default: 0 },
+  ai_tags: [{ type: String }],
+  ai_summary: { type: String }
+}, { timestamps: true });
+
+paintingSchema.index({ category: 1, style: 1, medium: 1 });
+paintingSchema.index({ popularity: -1, views: -1 });
 
 module.exports = mongoose.model('Painting', paintingSchema);

@@ -1,10 +1,51 @@
 const express = require('express');
+const Painting = require('../models/Painting');
+const { extractSearchFilters, generateChatReply, isGeminiConfigured } = require('../utils/gemini');
+const { buildPaintingFilter, paginateQuery } = require('../utils/queryHelpers');
+const { optionalAuth } = require('../middleware/auth');
+const { trackEvent } = require('../utils/analyticsService');
+
 const router = express.Router();
-const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+function formatPaintingsForPrompt(paintings) {
+  return paintings.slice(0, 8).map((p, index) =>
+    `${index + 1}. [${p.id}] ${p.title} - ${p.artist} (${p.style}, ${p.category}, ${p.medium})`
+  ).join('\n');
+}
 
-router.post('/', async (req, res) => {
+async function findPaintingsFromMessage(message) {
+  try {
+    const extracted = await extractSearchFilters(message);
+    const filter = {};
+
+    if (extracted.style) filter.style = { $regex: extracted.style, $options: 'i' };
+    if (extracted.category) filter.category = { $regex: extracted.category, $options: 'i' };
+    if (extracted.color_theme) filter.color_theme = { $regex: extracted.color_theme, $options: 'i' };
+    if (extracted.medium) filter.medium = { $regex: extracted.medium, $options: 'i' };
+    if (extracted.artist) filter.artist = { $regex: extracted.artist, $options: 'i' };
+
+    if (extracted.keyword) {
+      filter.$or = [
+        { title: { $regex: extracted.keyword, $options: 'i' } },
+        { description: { $regex: extracted.keyword, $options: 'i' } },
+        { ai_tags: { $regex: extracted.keyword, $options: 'i' } }
+      ];
+    }
+
+    if (Object.keys(filter).length === 0) {
+      const fallback = await paginateQuery(Painting, buildPaintingFilter({ q: message }), { limit: 6 });
+      return { paintings: fallback.data, extracted };
+    }
+
+    const result = await paginateQuery(Painting, filter, { limit: 8 });
+    return { paintings: result.data, extracted };
+  } catch (error) {
+    const fallback = await paginateQuery(Painting, buildPaintingFilter({ q: message }), { limit: 6 });
+    return { paintings: fallback.data, extracted: {} };
+  }
+}
+
+router.post('/', optionalAuth, async (req, res) => {
   try {
     const { message, history } = req.body;
 
@@ -12,33 +53,30 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Vui lòng gửi tin nhắn!' });
     }
 
-    // Thiết lập Model & Định hình tính cách cho Chatbot
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-1.5-flash',
-      systemInstruction: `Bạn là "ArtMind AI" - Trợ lý ảo chuyên gia về Tranh vẽ, Hội họa và Cảm hứng Nghệ thuật cho nền tảng ArtMind Portal.
-Nhiệm vụ của bạn:
-1. Tư vấn chọn tranh, giải thích các trường phái hội họa (Impressionism, Abstract, Sci-Fi Realism, Realism...).
-2. Hỗ trợ tạo các câu lệnh (Prompt) chi tiết bằng tiếng Anh để người dùng dùng cho Midjourney/DALL-E/Stable Diffusion nếu họ muốn sáng tạo tranh.
-3. Giọng văn: Thân thiện, tinh tế, giàu cảm xúc nghệ thuật, dùng tiếng Việt chuẩn xác.
-4. Trả lời ngắn gọn, súc tích (dưới 3-4 đoạn văn), sử dụng định dạng Markdown (bôi đậm, gạch đầu dòng) để dễ đọc.`
+    const { paintings, extracted } = await findPaintingsFromMessage(message);
+    const paintingContext = paintings.length
+      ? formatPaintingsForPrompt(paintings)
+      : 'Không tìm thấy tranh phù hợp trong cơ sở dữ liệu.';
+
+    const responseText = await generateChatReply(message, history, paintingContext, paintings);
+
+    await trackEvent({
+      userId: req.user?._id || null,
+      eventType: 'search',
+      keyword: message,
+      metadata: { source: 'chatbot', extracted }
     });
 
-    // Khởi tạo Chat Session hỗ trợ nhớ ngữ cảnh đối thoại
-    const chat = model.startChat({
-      history: history || []
-    });
-
-    const result = await chat.sendMessage(message);
-    const responseText = result.response.text();
-
-    res.json({
+    return res.json({
       success: true,
-      reply: responseText
+      reply: responseText,
+      suggested_paintings: paintings,
+      ai_extracted: extracted,
+      ai_mode: isGeminiConfigured() ? 'gemini' : 'local_fallback'
     });
-
   } catch (error) {
-    console.error('Lỗi AI Chatbot:', error);
-    res.status(500).json({ success: false, message: 'Lỗi xử lý AI Chatbot' });
+    console.error('Chatbot error:', error);
+    return res.status(500).json({ success: false, message: 'Lỗi xử lý AI Chatbot' });
   }
 });
 
