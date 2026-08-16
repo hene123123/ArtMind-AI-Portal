@@ -39,7 +39,11 @@ endobj
 (PDFKit)
 endobj
 12 0 obj
+<<<<<<< HEAD
 (D:20260816132812Z)
+=======
+(D:20260815154539Z)
+>>>>>>> 03daf8737992f8718fcf885394da06ad09f620dd
 endobj
 9 0 obj
 <<
@@ -102,7 +106,11 @@ trailer
 /Size 13
 /Root 3 0 R
 /Info 9 0 R
+<<<<<<< HEAD
 /ID [<2d852f6b4ae74e6b5d32dda56cbbbeea> <2d852f6b4ae74e6b5d32dda56cbbbeea>]
+=======
+/ID [<8f9c7646846b9a52bb5255ef18e446ec> <8f9c7646846b9a52bb5255ef18e446ec>]
+>>>>>>> 03daf8737992f8718fcf885394da06ad09f620dd
 >>
 startxref
 1348
