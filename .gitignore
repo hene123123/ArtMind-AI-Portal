@@ -2,5 +2,6 @@ node_modules/
 server/node_modules/
 dist/
 server/uploads/
+server/scripts/demo-output/
 .env
 server/.env
