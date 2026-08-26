@@ -1,15 +1,31 @@
-import React, { useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Download, Heart, Sparkles, User, Palette, Layers, FileText } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { Link, useParams } from 'react-router-dom';
 import { useArtStore } from '../store/useArtStore';
 
 export default function PaintingDetailPage({ artwork }) {
     const detailRef = useRef();
-    const { toggleFavorite, favorites } = useArtStore();
+    const { id } = useParams();
+    const { toggleFavorite, favorites, fetchPaintingById, loading, error, addRecentlyViewed } = useArtStore();
+    const [loadedArtwork, setLoadedArtwork] = useState(artwork || null);
+
+    useEffect(() => {
+        let active = true;
+        if (!artwork && id) {
+            fetchPaintingById(id).then((painting) => {
+                if (active && painting) {
+                    setLoadedArtwork(painting);
+                    addRecentlyViewed(painting);
+                }
+            });
+        }
+        return () => { active = false; };
+    }, [artwork, id, fetchPaintingById, addRecentlyViewed]);
 
     // Mẫu dữ liệu Mockup nếu chưa truyền props
-    const data = artwork || {
+    const data = loadedArtwork || {
         id: "art-101",
         title: "Symphony of Blue Silence",
         artist: "Elena Vance",
@@ -20,6 +36,14 @@ export default function PaintingDetailPage({ artwork }) {
         aiSummary: "Tác phẩm thể hiện sự tương phản mạnh mẽ giữa gam xanh thẫm và ánh kim vàng, tượng trưng cho sự yên bình nội tâm giữa những chuyển động phức tạp của thời đại.",
         imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
     };
+
+    if (loading && !loadedArtwork) {
+        return <div className="py-20 text-center text-purple-300">Đang tải thông tin tác phẩm...</div>;
+    }
+
+    if (error && !loadedArtwork) {
+        return <div className="space-y-4 py-20 text-center"><p className="text-red-300">{error}</p><Link to="/gallery" className="text-purple-300 underline">Quay lại gallery</Link></div>;
+    }
 
     const isFav = favorites.some((f) => f.id === data.id);
 

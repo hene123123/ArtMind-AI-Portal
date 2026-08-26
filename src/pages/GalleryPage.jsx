@@ -147,6 +147,7 @@ export default function GalleryPage() {
                               return filtered.map((item) => (
                                 <ArtworkCard
                                     key={item._id || item.id}
+                                    id={item.id || item._id}
                                     title={item.title}
                                     medium={item.medium}
                                     author={item.artist || item.author}

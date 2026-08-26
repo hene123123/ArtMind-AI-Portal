@@ -5,10 +5,9 @@ import GalleryPage from '../pages/GalleryPage';
 import PaintingDetailPage from '../pages/PaintingDetailPage';
 import AiScanPage from '../pages/AiScanPage';
 import AuthPage from '../pages/AuthPage'; // (thêm import trang AuthPage ở đây)
+import DashboardPage from '../pages/DashboardPage';
 
-// Mock component cho các trang khác
 const ImageRecognitionPage = () => <div className="p-8 text-center text-slate-400"><AiScanPage /></div>;
-const DashboardPage = () => <div className="p-8 text-center text-slate-400">[User Dashboard & Analytics - Do Châu & Minh kết hợp]</div>;
 
 export default function AppRoutes() {
     return (

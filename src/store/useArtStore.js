@@ -34,6 +34,7 @@ export const useArtStore = create((set, get) => ({
   loading: false,
   error: null,
   aiAnalysisResult: null,
+  dashboardData: null,
 
   // ==========================================
   // 2. USER DATA & LOCAL STATE
@@ -142,6 +143,25 @@ export const useArtStore = create((set, get) => ({
     }
   },
 
+  fetchPaintingById: async (id) => {
+    set({ loading: true, error: null });
+    try {
+      const res = await fetch(`${API_BASE_URL}/paintings/${encodeURIComponent(id)}`);
+      const result = await res.json();
+      if (!result.success) {
+        set({ error: result.message || 'Không tìm thấy tranh', loading: false });
+        return null;
+      }
+      const painting = normalizePainting(result.data);
+      set({ loading: false, error: null });
+      return painting;
+    } catch (err) {
+      console.error('Lỗi fetch painting:', err);
+      set({ error: 'Không thể kết nối tới Server Backend', loading: false });
+      return null;
+    }
+  },
+
   executeSmartSearch: async (queryText) => {
     set({ loading: true, error: null });
     try {
@@ -193,6 +213,50 @@ export const useArtStore = create((set, get) => ({
     }
   },
 
+  fetchDashboardData: async () => {
+    const token = localStorage.getItem('artmind_token');
+    if (!token) return null;
+    set({ loading: true, error: null });
+    try {
+      const headers = getAuthHeaders();
+      const [favoritesRes, recentRes, recommendationsRes, collectionsRes, insightsRes] = await Promise.all([
+        fetch(`${API_BASE_URL}/users/me/favorites`, { headers }),
+        fetch(`${API_BASE_URL}/users/me/recent`, { headers }),
+        fetch(`${API_BASE_URL}/users/me/recommendations?limit=8`, { headers }),
+        fetch(`${API_BASE_URL}/users/me/collections?limit=4`, { headers }),
+        fetch(`${API_BASE_URL}/analytics/insights`, { headers }),
+      ]);
+      const payloads = await Promise.all([
+        favoritesRes.json(), recentRes.json(), recommendationsRes.json(), collectionsRes.json(), insightsRes.json(),
+      ]);
+      if (payloads.some((payload) => !payload.success)) {
+        throw new Error('Không thể tải dashboard');
+      }
+      const [favorites, recent, recommendations, collections, insights] = payloads;
+      const data = {
+        favorites: favorites.data.map(normalizePainting),
+        recent: recent.data.map(normalizePainting),
+        recommendations: (recommendations.recommendations || []).map(normalizePainting),
+        collections: {
+          aiCurated: (collections.data?.aiCurated || []).map((collection) => ({
+            ...collection,
+            paintings: collection.paintings.map(normalizePainting),
+          })),
+          personalized: (collections.data?.personalized || []).map(normalizePainting),
+        },
+        insights: insights.data,
+      };
+      set({ dashboardData: data, favorites: data.favorites, recentlyViewed: data.recent, loading: false });
+      localStorage.setItem('artmind_favorites', JSON.stringify(data.favorites));
+      localStorage.setItem('artmind_recent', JSON.stringify(data.recent));
+      return data;
+    } catch (err) {
+      console.error('Dashboard error:', err);
+      set({ error: 'Không thể tải dữ liệu cá nhân', loading: false });
+      return null;
+    }
+  },
+
   // ==========================================
   // 5. LOCAL ACTIONS
   // ==========================================
@@ -207,26 +271,43 @@ export const useArtStore = create((set, get) => ({
       filters: { category: 'All', medium: 'All', surface: 'All' },
     }),
 
-  toggleFavorite: (artwork) =>
-    set((state) => {
-      const id = artwork.id || artwork._id;
-      const exists = state.favorites.some((item) => (item.id || item._id) === id);
+  toggleFavorite: async (artwork) => {
+    const state = get();
+    const id = artwork.id || artwork._id;
+    const exists = state.favorites.some((item) => (item.id || item._id) === id);
+    if (state.token) {
+      const response = await fetch(`${API_BASE_URL}/users/me/favorites/${encodeURIComponent(id)}`, {
+        method: exists ? 'DELETE' : 'POST',
+        headers: getAuthHeaders(),
+      });
+      if (!response.ok) return;
+    }
+    set((currentState) => {
       let next;
       if (exists) {
-        next = state.favorites.filter((item) => (item.id || item._id) !== id);
+        next = currentState.favorites.filter((item) => (item.id || item._id) !== id);
       } else {
-        next = [...state.favorites, normalizePainting(artwork)];
+        next = [...currentState.favorites, normalizePainting(artwork)];
       }
       localStorage.setItem('artmind_favorites', JSON.stringify(next));
       return { favorites: next };
-    }),
+    });
+  },
 
-  addRecentlyViewed: (artwork) =>
+  addRecentlyViewed: async (artwork) => {
+    const id = artwork.id || artwork._id;
+    const token = localStorage.getItem('artmind_token');
+    if (token) {
+      fetch(`${API_BASE_URL}/users/me/recent/${encodeURIComponent(id)}`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+      }).catch((err) => console.error('Lỗi đồng bộ lịch sử xem:', err));
+    }
     set((state) => {
-      const id = artwork.id || artwork._id;
       const filtered = state.recentlyViewed.filter((item) => (item.id || item._id) !== id);
       const next = [normalizePainting(artwork), ...filtered].slice(0, 10);
       localStorage.setItem('artmind_recent', JSON.stringify(next));
       return { recentlyViewed: next };
-    }),
+    });
+  },
 }));

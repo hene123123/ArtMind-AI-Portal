@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, ImageOff } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const PLACEHOLDER =
   'data:image/svg+xml,' +
@@ -11,7 +12,7 @@ const PLACEHOLDER =
     </svg>`
   );
 
-export default function ArtworkCard({ title, medium, author, views, imageUrl }) {
+export default function ArtworkCard({ id, title, medium, author, views, imageUrl }) {
   const [src, setSrc] = useState(imageUrl || PLACEHOLDER);
   const [failed, setFailed] = useState(false);
 
@@ -21,7 +22,7 @@ export default function ArtworkCard({ title, medium, author, views, imageUrl }) 
   }, [imageUrl]);
 
   return (
-    <div className="group bg-[#161b33] border border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden transition-all duration-300 shadow-md hover:shadow-purple-900/20 flex flex-col justify-between cursor-pointer">
+    <Link to={`/painting/${id}`} className="group bg-[#161b33] border border-slate-800 hover:border-purple-500/50 rounded-2xl overflow-hidden transition-all duration-300 shadow-md hover:shadow-purple-900/20 flex flex-col justify-between cursor-pointer">
       <div className="aspect-[3/4] overflow-hidden relative bg-slate-900">
         {!failed ? (
           <img
@@ -52,6 +53,6 @@ export default function ArtworkCard({ title, medium, author, views, imageUrl }) 
           </span>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
